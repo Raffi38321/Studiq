@@ -1,0 +1,28 @@
+<Down># Ignore version control systems
+.git
+.gitignore
+
+# Ignore local dependencies (let Docker install them)
+node_modules/
+vendor/
+
+# Ignore local build artifacts and caches
+dist/
+build/
+.cache/
+
+# Ignore environments and sensitive secrets
+.env
+.env.*
+*.pem
+secrets.txt
+
+# Ignore logs and system files
+*.log
+.DS_Store
+Thumbs.db
+
+# Ignore Docker configurations (optional but recommended)
+Dockerfile
+.dockerignore
+
