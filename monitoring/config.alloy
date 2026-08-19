@@ -1,0 +1,28 @@
+// cari container apa aja yang lagi jalan
+discovery.docker "local_containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// ngubah metadata jadi sesuatu yang gampang dibaca
+discovery.relabel "docker_logs" {
+  targets = discovery.docker.local_containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "container"
+  }
+}
+
+// baca log
+loki.source.docker "scraped_logs" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_logs.output
+  forward_to = [loki.write.local_loki.receiver]
+}
+
+// kirim data ke loki
+loki.write "local_loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
