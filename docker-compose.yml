@@ -1,5 +1,6 @@
 services:
   mongodb:
+    container_name: "mongodb"
     image: mongo:8.0.4
     restart: always
     environment:
@@ -10,6 +11,7 @@ services:
 
   broker:
     image: apache/kafka:latest
+    container_name: "kafka-broker"
     ports:
       - "9092:9092"
     environment:
