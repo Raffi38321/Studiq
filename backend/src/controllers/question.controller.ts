@@ -10,6 +10,7 @@ export const generateQuestion = async (req: Request,res: Response) => {
         const { id } = req.params
         const note = await Note.findById(id)
         if (!note) {
+            logger.war
             return response.notFoundError(res,"note ga ketemu")
         }
         console.log(JSON.stringify( note ));
