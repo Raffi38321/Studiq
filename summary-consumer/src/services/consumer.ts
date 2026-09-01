@@ -2,6 +2,7 @@ import { Kafka } from "kafkajs";
 import envVariables from "../utils/Env.js";
 import requestAI from "./ai.js";
 import Note from "../models/note.model.js";
+import logger from "../configs/logger.js";
 
 const kafka = new Kafka({
     brokers:[envVariables.KAFKA_BROKER]
@@ -22,13 +23,14 @@ export const startConsumer = async () => {
             if (!message.value) return
 
             const note = JSON.parse(message.value.toString())
-
+            logger.info({event:"note.received",noteId:note._id},"note retreived")
             const res = await requestAI({
                 body: note.body,
                 title: note.title
             })
+            logger.info({event:"note.summary.generated",noteId:note._id},"summary generated")
 
-            await Note.findByIdAndUpdate(
+            const updatedNote = await Note.findByIdAndUpdate(
                 note._id,
                 {
                     summary: res.summary,
@@ -36,6 +38,11 @@ export const startConsumer = async () => {
                 },
                 { new: true }
             )
+            if(!updatedNote){
+                logger.fatal({event:"note.summary.update_failed",noteId:note._id},"note not found")  
+                return
+            }
+            logger.info({event:"note.summary.updated",noteId:note._id},"note updated")
         }
     })
 }

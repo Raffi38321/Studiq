@@ -39,7 +39,6 @@ const requestAI = async ({ body, title }: RequestAIProps) => {
         .replace(/\s*```$/, "")
 
     const res = JSON.parse(cleanOutput)
-        // console.log("ini outpu",output);
 
     return {
         summary: res.summary,
@@ -47,12 +46,5 @@ const requestAI = async ({ body, title }: RequestAIProps) => {
     }
 
 }
-
-// const coba = requestAI({
-//   "title":"pengertian kafka",
-//   "body":"kafka adalah event streaming platforn yang populer."})
-
-// console.log("ini coba",coba);
-
 export default requestAI
 
