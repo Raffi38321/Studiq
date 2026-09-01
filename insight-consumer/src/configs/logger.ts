@@ -1,11 +1,5 @@
 import pino from "pino";
 
-const logDir = "./src/logs"
-const fileTransport = pino.transport({
-    target:"pino/file",
-    options:{destination:`${logDir}/app.log`}
-})
-
 const logger = pino({
     base:{
         service:"insight-consumer"
@@ -19,7 +13,7 @@ const logger = pino({
         },
     },
     timestamp: pino.stdTimeFunctions.isoTime
-},fileTransport)
+})
 
 
 export default logger

@@ -1,14 +1,16 @@
-// cari container apa aja yang lagi jalan
+// Discover semua container Docker
 discovery.docker "local_containers" {
-  host = "unix:///var/run/docker.sock"
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
 }
 
-// ngubah metadata jadi sesuatu yang gampang dibaca
+// Buat rules untuk mengubah metadata Docker menjadi label Loki
 discovery.relabel "docker_logs" {
-  targets = discovery.docker.local_containers.targets
+  targets = []
 
   rule {
     source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
     target_label  = "container"
   }
 
@@ -16,16 +18,22 @@ discovery.relabel "docker_logs" {
     source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
     target_label  = "service"
   }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
 }
 
-// baca log
+// Baca log Docker
 loki.source.docker "scraped_logs" {
-  host       = "unix:///var/run/docker.sock"
-  targets    = discovery.relabel.docker_logs.output
-  forward_to = [loki.write.local_loki.receiver]
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.local_containers.targets
+  relabel_rules = discovery.relabel.docker_logs.rules
+  forward_to    = [loki.write.local_loki.receiver]
 }
 
-// kirim data ke loki
+// Kirim ke Loki
 loki.write "local_loki" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
