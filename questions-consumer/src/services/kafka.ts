@@ -22,15 +22,22 @@ export const startConsumer = async () => {
         eachMessage: async ({ message }) => {
             if (!message.value) return
 
-            const note = JSON.parse(message.value.toString())
-            logger.info({event:"question.generate.received",noteId:note._id},"note retreived from cluster")
-            const res = await generateQuestion({title:note.title,body:note.body})
-            logger.info({event:"question.generate.succeed",noteId:note._id},"question generated")
-            const question = await Question.create({
-                question: res.question,
-                note_id: note._id
-            })
-            logger.info({event:"question.generate.received",questionId:question._id,noteId:note._id},"question writed")
+            const data = JSON.parse(message.value.toString())
+            const note = data.note
+            const correlationId = data.correlationId
+            try {    
+                logger.info({event:"question.generate.received",noteId:note._id,correlationId},"note retreived from cluster")
+                const res = await generateQuestion({title:note.title,body:note.body})
+                logger.info({event:"question.generate.succeed",noteId:note._id,correlationId},"question generated")
+                const question = await Question.create({
+                    question: res.question,
+                    note_id: note._id
+                })
+                logger.info({event:"question.generate.received",questionId:question._id,noteId:note._id,correlationId},"question writed")
+            } catch (err) {
+                logger.error({event:"question.generate.failed",noteId:note._id,correlationId,err},"failed generate question")
+                throw err
+            }
         }
     })
 }
