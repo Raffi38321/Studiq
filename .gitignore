@@ -3,3 +3,7 @@
 .env
 .env.*
 !.env.example
+
+app.log
+*/logs/*
+*/logs

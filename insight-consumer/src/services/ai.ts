@@ -24,7 +24,7 @@ const generateInsight = async ({ question,answer }:IQuestion) => {
 
     const output = interaction.output_text
     if (!output) {
-        throw new Error("gemini kontol");
+        throw new Error("output ga keluar");
     }
 
     const cleanOutput = output
