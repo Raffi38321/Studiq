@@ -23,9 +23,12 @@ export const createNote = async (req:Request, res:Response) => {
             }]
         })
         logger.info({event:"note.created",noteId:note._id},"send to kafka cluster")
-        response.createdSuccess(res,"berhasil buat note",note)
+
+        response.createdSuccess(res,"berhasil buat note",
+            note
+        )
     } catch (err) {
-        logger.error({err},"gagal buat note")
+        logger.error({event:"note.create.failed",err},"gagal buat note")
         response.serverError(res,"gagal buat note")
     }
 }
