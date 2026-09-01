@@ -5,23 +5,25 @@ import Question from "../models/question.model.js";
 import { Types } from "mongoose";
 import Note from "../models/note.model.js";
 import logger from "../configs/logger.js";
+import {randomUUID} from "crypto"
 
 export const generateQuestion = async (req: Request,res: Response) => {
+    const correlationId = randomUUID()
     try {
         const { id } = req.params
         const note = await Note.findById(id)
         if (!note) {
-            logger.info({event:"note.not_found",noteId:id},"note not found")
+            logger.info({event:"note.not_found",noteId:id,correlationId},"note not found")
             return response.notFoundError(res,"note ga ketemu")
         }
         await producer.send({
             topic: "question.generate.requested",
-            messages: [{ key:`${id}`,value: JSON.stringify(note ) }]
+            messages: [{ key:`${id}`,value: JSON.stringify({note,correlationId}) }]
         })
-        logger.info({event:"question.generate.requested",noteId:note._id},"sent to kafka cluster")
+        logger.info({event:"question.generate.requested",noteId:note._id,correlationId},"sent to kafka cluster")
         response.createdSuccess(res,"berhasil request generate question",{})
     } catch (err) {
-        logger.error({event:"question.generate.failed",noteId:req.params.id,err},"gagal generate question")
+        logger.error({event:"question.generate.failed",noteId:req.params.id,err,correlationId},"gagal generate question")
         response.serverError(res,"gagal generate question")
     }
 }
@@ -63,6 +65,7 @@ export const getAllQuestion = async (_req: Request,res: Response) => {
     }
 }
 export const answerQuestionAndGetInsight = async (req: Request,res: Response) => {
+    const correlationId = randomUUID()
     try {
         const { answer } = req.body
         const { id } = req.params
@@ -72,14 +75,15 @@ export const answerQuestionAndGetInsight = async (req: Request,res: Response) =>
             { returnDocument: "after" }
         )
         if (!question) {
-            logger.info({event: "question.not_found", questionId: id},"Question not found")
+            logger.info({event: "question.not_found", questionId: id,correlationId},"Question not found")
             return response.notFoundError(res, "question not found")
         }
 
         logger.info(
             {
                 event: "question.answered",
-                questionId: question._id
+                questionId: question._id,
+                correlationId
             },
             "Question answered successfully"
         )
@@ -89,7 +93,7 @@ export const answerQuestionAndGetInsight = async (req: Request,res: Response) =>
             messages: [
                 {
                     key: `${id}`,
-                    value: JSON.stringify(question)
+                    value: JSON.stringify({question,correlationId})
                 }
             ]
         })
@@ -98,7 +102,8 @@ export const answerQuestionAndGetInsight = async (req: Request,res: Response) =>
             {
                 event: "question.insight.requested",
                 questionId: question._id,
-                topic: "question.insight.requested"
+                topic: "question.insight.requested",
+                correlationId
             },
             "Question insight request sent to Kafka"
         )
