@@ -22,27 +22,34 @@ export const startConsumer = async () => {
         eachMessage: async ({ message }) => {
             if (!message.value) return
 
-            const note = JSON.parse(message.value.toString())
-            logger.info({event:"note.received",noteId:note._id},"note retreived")
-            const res = await requestAI({
-                body: note.body,
-                title: note.title
-            })
-            logger.info({event:"note.summary.generated",noteId:note._id},"summary generated")
+            const data = JSON.parse(message.value.toString())
+            const note = data.note
+            const correlationId = data.correlationId
+            try {
+                logger.info({event:"note.received",noteId:note._id,correlationId},"note retreived")
+                const res = await requestAI({
+                    body: note.body,
+                    title: note.title
+                })
+                logger.info({event:"note.summary.generated",noteId:note._id,correlationId},"summary generated")
 
-            const updatedNote = await Note.findByIdAndUpdate(
-                note._id,
-                {
-                    summary: res.summary,
-                    additional_info: res.additional_info
-                },
-                { new: true }
-            )
-            if(!updatedNote){
-                logger.fatal({event:"note.summary.update_failed",noteId:note._id},"note not found")  
-                return
+                const updatedNote = await Note.findByIdAndUpdate(
+                    note._id,
+                    {
+                        summary: res.summary,
+                        additional_info: res.additional_info
+                    },
+                    { new: true }
+                )
+                if(!updatedNote){
+                    logger.warn({event:"note.summary.update.not_found",noteId:note._id,correlationId},"note not found")  
+                    return
+                }
+                logger.info({event:"note.summary.updated",noteId:note._id,correlationId},"note updated")
+            } catch (err) {
+                logger.error({event:"note.summary.failed",noteId:note._id,err,correlationId},"failed generate summary")
+                throw err
             }
-            logger.info({event:"note.summary.updated",noteId:note._id},"note updated")
         }
     })
 }
