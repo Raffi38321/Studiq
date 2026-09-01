@@ -21,18 +21,33 @@ export const startConsumerInsight = async () => {
             if (!message.value) {
                 return
             }
-            const question = JSON.parse(message.value.toString())
+            const data = JSON.parse(message.value.toString())
+            const question = data.question
+            const correlationId = data.correlationId
             const id = question._id
-            logger.info({event:"question.insight.received",questionId:id},"success retreive question from cluster")
-            const res = await generateInsight({ question: question.question, answer: question.answer })
-            logger.info({event:"question.insight.generated",questionId:id},"insight generated")
-            const updatedQuestion = await Question.findByIdAndUpdate(id, { ai_answer: res.ai_answer, score: res.score }, { new: true })
-            if(!updatedQuestion){
-                logger.warn({event:"question.insight.update.not_found",questionId:id},"failed update question cause not found")
-                return
+            try {              
+                logger.info({event:"question.insight.received",questionId:id,correlationId},"success retreive question from cluster")
+                const res = await generateInsight({ question: question.question, answer: question.answer })
+                logger.info({event:"question.insight.generated",questionId:id,correlationId},"insight generated")
+                const updatedQuestion = await Question.findByIdAndUpdate(id, { ai_answer: res.ai_answer, score: res.score }, { new: true })
+                if(!updatedQuestion){
+                    logger.warn({event:"question.insight.update.not_found",questionId:id,correlationId},"failed update question cause not found")
+                    return
+                }
+                logger.info({event:"question.insight.updated",questionId:id,correlationId},"updated question with insight")
+            } catch (err) {
+                logger.error(
+                    {
+                        event: "question.insight.failed",
+                        questionId: id,
+                        correlationId,
+                        err
+                    },
+                    "failed to process question insight"
+                )
+                throw err
             }
-            logger.info({event:"question.insight.updated",questionId:id},"updated question with insight")
-        }
+      }
     })
 }
 
