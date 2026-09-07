@@ -4,6 +4,8 @@ import producer from "../services/kafka.js";
 import response from "../utils/reponse.js";
 import logger from "../configs/logger.js";
 import {randomUUID} from "crypto"
+import Question from "../models/question.model.js";
+import { Types } from "mongoose";
 
 export const createNote = async (req:Request, res:Response) => {
     const correlationId = randomUUID()
@@ -47,5 +49,28 @@ export const getAllNote = async (req:Request, res:Response) => {
     } catch (err) {
         logger.error({err},"gagal getAllNote")
         response.serverError(res,"gagal getAllNote")
+    }
+}
+
+
+export const getNoteById = async(req:Request,res:Response)=>{
+    try {
+        const { id } = req.params as { id: string };
+        if (!id) {
+            return response.userError(res, "ID tidak ditemukan",404);
+        }
+        if (!Types.ObjectId.isValid(id)) {
+            return response.userError(res, "Format ID tidak valid",400);
+        }
+        const idToObjectId = new Types.ObjectId(id);
+        const [note, questions] = await Promise.all([
+            Note.findById(id),
+            Question.find({ note_id: idToObjectId })
+        ]);
+
+        response.requestSuccess(res,"berhasil dapet note",{note,questions})
+    } catch (err) {
+        logger.error({err},"gagal getNoteById")
+        response.serverError(res,"gagal getNoteById")
     }
 }
