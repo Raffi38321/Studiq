@@ -12,8 +12,8 @@ const PORT = envVariable.PORT
 
 app.use(express.json())
 app.use(pinoHttp({logger}))
-// await connectDB()
-// await producer.connect().then(()=>{logger.info("kafka connect")}).catch((err)=>logger.warn({err},"kafka not connect"))
+await connectDB()
+await producer.connect().then(()=>{logger.info("kafka connect")}).catch((err)=>logger.warn({err},"kafka not connect"))
 
 app.get("/", (_req: Request, res: Response) => {
     res.status(200).json({

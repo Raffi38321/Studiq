@@ -19,7 +19,7 @@ const requestAI = async ({ body, title }: RequestAIProps) => {
             if the content is wrong, write what is wrong in additional_info
             Return JSON with exactly these fields:
             {
-            "summary": "maximum 120 words",
+            "summary": "maximum 50 words",
             "additional_info": "maximum 100 words"
             }
 

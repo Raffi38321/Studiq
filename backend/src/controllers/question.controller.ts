@@ -55,15 +55,39 @@ export const getAllQuestionByNoteId = async (req: Request, res: Response) => {
     }
 };
 
-export const getAllQuestion = async (_req: Request,res: Response) => {
+export const getAllQuestion = async (req: Request, res: Response) => {
     try {
-        const questions = await Question.find()
-        response.requestSuccess(res,"berhasil getAllQuestion",questions)
+        const limit = Math.min(
+            Math.max(Number(req.query.limit) || 10, 1),
+            100
+        )
+
+        const page = Math.max(Number(req.query.page) || 1, 1)
+
+        const skip = (page - 1) * limit
+
+        const [questions, total] = await Promise.all([
+            Question.find()
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+
+            Question.countDocuments()
+        ])
+
+        response.requestSuccess(res, "berhasil getAllQuestion", {
+            questions,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+        })
     } catch (err) {
-        logger.error({err},"gagal getAllQuestion")
-        response.serverError(res,"gagal getAllQuestion")
+        logger.error({ err }, "gagal getAllQuestion")
+        response.serverError(res, "gagal getAllQuestion")
     }
 }
+
 export const answerQuestionAndGetInsight = async (req: Request,res: Response) => {
     const correlationId = randomUUID()
     try {

@@ -36,10 +36,14 @@ export const createNote = async (req:Request, res:Response) => {
 }
 
 
-export const getAllNote = async (_req:Request, res:Response) => {
+export const getAllNote = async (req:Request, res:Response) => {
     try {
-        const notes = await Note.find()
-        response.requestSuccess(res,"berhasil daper semua note",notes)
+        const limit = Math.min(Math.max(Number(req.query.limit)||10,1),100)
+        const page = Math.max(Number(req.query.page)||1,1)
+        const skip = (page-1)*limit
+        const total = await Note.countDocuments()
+        const notes = await Note.find().skip(skip).limit(limit).sort({createdAt:-1})
+        response.requestSuccess(res,"berhasil daper semua note",{notes,total,limit,page,totalPages:Math.ceil(total/limit)})
     } catch (err) {
         logger.error({err},"gagal getAllNote")
         response.serverError(res,"gagal getAllNote")
