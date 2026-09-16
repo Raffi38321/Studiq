@@ -1,6 +1,6 @@
 STUDIQ adalah platform belajar
 
-kanjut badag
+vjlfsjlkvklskanjut badag
 
 {
     "timestamp":"",

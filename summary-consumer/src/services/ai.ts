@@ -17,6 +17,7 @@ const requestAI = async ({ body, title }: RequestAIProps) => {
             Summarize this study note and provide additional useful information.
             be critical
             if the content is wrong, write what is wrong in additional_info
+	    answer with the content language 
             Return JSON with exactly these fields:
             {
             "summary": "maximum 50 words",
